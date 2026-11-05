@@ -22,9 +22,29 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Paths
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const QUEUE_FILE = path.join(__dirname, 'offline-queue.json');
+
+// Auto-load optional local .env if present (zero dependencies, git-ignored)
+try {
+  const envContent = await fs.readFile(path.join(__dirname, '.env'), 'utf-8');
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx !== -1) {
+      const key = trimmed.slice(0, eqIdx).trim();
+      const val = trimmed.slice(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
+      if (process.env[key] === undefined) process.env[key] = val;
+    }
+  }
+} catch (_) {}
+
 // ─── Configuration ──────────────────────────────────────────────────────────
 const PORT = Number(process.env.SERVER_PORT || process.env.PORT || 11898);
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://kkltrgjszsuozlrnjrnb.supabase.co/functions/v1/attendance-log';
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '';
 
 // Protocol constants (from RealTimeFrm.pas)
@@ -35,11 +55,6 @@ const GLOG_LEN = 32;          // Expected binary packet length
 const DEDUP_WINDOW_MS = 30_000; // 30 seconds
 const MAX_DEDUP_ENTRIES = 2_000;
 const recentHashes = new Map(); // hash → timestamp
-
-// Offline queue persistence path
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const QUEUE_FILE = path.join(__dirname, 'offline-queue.json');
 
 // Memory buffer for offline queue
 let offlineQueue = [];
@@ -209,6 +224,11 @@ function enqueueOffline(item) {
 
 // ─── Supabase Sync with Exponential Backoff ─────────────────────────────────
 async function executeHttpRequest(payload) {
+  if (!SUPABASE_URL) {
+    console.warn('  ⚠️  SUPABASE_URL is not set. Skipping cloud sync (set process.env.SUPABASE_URL).');
+    return { ok: false, status: 0, body: 'SUPABASE_URL not configured' };
+  }
+
   const headers = { 'Content-Type': 'application/json' };
   if (SUPABASE_KEY) {
     headers['apikey'] = SUPABASE_KEY;
@@ -295,7 +315,7 @@ server.on('listening', () => {
   console.log(`   Listening on 0.0.0.0:${addr.port}`);
   console.log(`   Protocol: CS-Desktop 2960/2911 Binary Push`);
   console.log(`   ACK Mode: Verified 32-Byte Verbatim Echo`);
-  console.log(`   Target:   ${SUPABASE_URL}`);
+  console.log(`   Target:   ${SUPABASE_URL || '(SUPABASE_URL not set - running in offline/local test mode)'}`);
   console.log(`   Offline Storage: Enabled (${QUEUE_FILE})`);
   console.log(`══════════════════════════════════════════════════════════\n`);
 });

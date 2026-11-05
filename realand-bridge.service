@@ -4,13 +4,13 @@ After=network.target
 
 [Service]
 Type=simple
-User=semilore
-WorkingDirectory=/home/semilore/realand-local-bridge
+User=your-username
+WorkingDirectory=/path/to/realand-bridge
 ExecStart=/usr/bin/node server.js
 Restart=always
 RestartSec=5
 Environment=PORT=11898
-Environment=SUPABASE_URL=https://kkltrgjszsuozlrnjrnb.supabase.co/functions/v1/attendance-log
+Environment=SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co/functions/v1/attendance-log
 Environment=SUPABASE_SERVICE_KEY=
 
 # Hardening

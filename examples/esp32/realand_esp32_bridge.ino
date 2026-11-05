@@ -35,7 +35,7 @@ const uint32_t GLOG_MAGIC = 0x77EDC45C;       // Bytes: 0x5C, 0xC4, 0xED, 0x77 (
 const size_t   GLOG_LEN   = 32;
 
 // ─── Cloud API Configuration ──────────────────────────────────────────────
-const char* SUPABASE_URL  = "https://kkltrgjszsuozlrnjrnb.supabase.co/functions/v1/attendance-log";
+const char* SUPABASE_URL  = "https://YOUR_PROJECT_ID.supabase.co/functions/v1/attendance-log";
 const char* SUPABASE_KEY  = "YOUR_SUPABASE_ANON_OR_SERVICE_KEY"; // Optional if auth required
 
 WiFiUDP udp;
