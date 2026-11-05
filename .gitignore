@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Local runtime & persistence
+offline-queue.json
+.env
+*.log
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Visual Studio & Compiler Build Artifacts (from SDK reference)
+*.sdf
+*.suo
+*.user
+*.pdb
+*.idb
+*.ilk
+ipch/
+Debug/
+Release/
+obj/
+bin/
