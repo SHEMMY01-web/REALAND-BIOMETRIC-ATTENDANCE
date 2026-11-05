@@ -11,7 +11,12 @@ offline-queue.json
 .DS_Store
 Thumbs.db
 
-# Visual Studio & Compiler Build Artifacts (from SDK reference)
+# Vendor Proprietary SDK (Untracked for copyright/licensing protection)
+SDK-CS-Desktop-Software(2960)/
+*SDK*/
+RL10079DesktopDemo/
+
+# Visual Studio & Compiler Build Artifacts
 *.sdf
 *.suo
 *.user

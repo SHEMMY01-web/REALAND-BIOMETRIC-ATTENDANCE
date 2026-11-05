@@ -133,7 +133,7 @@ In JavaScript / Node.js, `readBigUInt64LE(8)` is used to guarantee that large nu
 
 The most elusive bug in Realand reverse-engineering was the hardware acknowledgment requirement.
 
-In the official Delphi SDK file [`RealTimeFrm.pas` line 121](SDK-CS-Desktop-Software(2960)/RL10079DesktopDemo/RL10079DesktopDemo_Attendance_AccessControl_Delphi/Implementation/RealTimeFrm.pas#L121), the author discovered the exact code:
+In the official Delphi SDK file (`RealTimeFrm.pas` line 121, documented in [`docs/PROTOCOL_SPEC.md`](docs/PROTOCOL_SPEC.md)), the exact logic was identified:
 
 ```pascal
 FUDPServer.SendBuffer(ABinding.PeerIP, ABinding.PeerPort, lReceiveData[0], GLogLen);
@@ -315,42 +315,59 @@ The complete Arduino C++ firmware sketch is located in [`examples/esp32/realand_
 
 ## 7. Deployment Guide 3: Free & Low-Cost Cloud Hosting (The UDP Reality)
 
-> [!WARNING]
-> **Why Vercel, Netlify, Render Free Web Services, and Railway Free Web Tiers FAIL for Realand:**
-> Serverless platforms and standard free PaaS are **HTTP reverse proxies**. They only accept incoming TCP traffic on ports 80 and 443, terminate TLS, and route HTTP requests. **They cannot listen on raw UDP sockets.**
+The fundamental challenge with hosting this bridge in the cloud is that **95% of "free tier" cloud platforms only support HTTP/TCP web traffic**. They utilize reverse proxies (Cloudflare, Nginx, Envoy) that terminate HTTP/TLS connections and **completely drop raw incoming UDP datagrams**.
 
-### Proven Architectures for UDP Cloud Bridging:
+Even **Fly.io** does not work out-of-the-box on their free tier:
+- Fly.io requires a credit/debit card upfront to register.
+- Dedicated public IPv4 addresses cost **\$2/month** on Fly.io (their free shared IPs only proxy HTTP/TLS). Because the Realand A-L355 terminal requires a raw numeric IPv4 address and speaks raw UDP, Fly.io's free shared routing cannot accept or route the packets.
 
-#### 1. The Local Edge Relay (100% Free)
-- Run the bridge on your local network (using an **ESP32**, **Raspberry Pi**, or an office **PC/Laptop**).
-- The local bridge receives the raw UDP from the terminal and forwards standard HTTP/JSON payloads to **free cloud serverless functions** (Supabase Edge Functions, Firebase, Vercel, or AWS Lambda).
-- *Cost:* **$0/month**.
+---
 
-#### 2. Oracle Cloud "Always Free" Compute (100% Free Cloud VM)
-Oracle Cloud offers a perpetual free tier with dedicated public IPv4 addresses:
-- **VM.Standard.A1.Flex** (Up to 4 OCPUs, 24 GB RAM, Ampere ARM) or **VM.Standard.E2.1.Micro** (x86).
-- Create a compute instance with Ubuntu.
-- In the Oracle Cloud Virtual Cloud Network (VCN) Ingress Rules, add:
-  - Protocol: `UDP`
-  - Destination Port: `11898`
-- Run `server.js` via PM2 or systemd. Point your Realand terminal to your Oracle Public IP.
+### Category 1: Free & Budget Container Hosts (What We Considered & Deployed)
 
-#### 3. Fly.io (Low-Cost / Free Allowance)
-Fly.io supports raw UDP routing using dedicated IPv4 addresses. Configure `fly.toml`:
-```toml
-app = "realand-bridge"
+| Host | Architecture | UDP Capability | Cost / Verification | Renewal Cycle |
+|---|---|---|---|---|
+| **Wispbyte (What we deployed)** | Pterodactyl Container | Direct unproxied public IPv4 (`78.154.103.49`) with open port (`11898`). Accepts raw UDP. | **100% Free** (No credit card needed) | Requires clicking "Renew" every 14 days in dashboard |
+| **HidenCloud** | Pterodactyl Container | Containerized host with open UDP port allocations. | **100% Free** (No credit card needed) | Requires clicking "Renew" every 7 days |
+| **ESP32 / ESP8266 Microcontroller** | Local Edge Hardware | Runs on local LAN (`192.168.1.x`), listens on UDP port `11898` / `8000`, pushes to Supabase via HTTPS. | **~\$4 one-time** hardware cost | **Permanent Zero-Maintenance** (No cards, no renewal buttons, zero cloud downtime) |
 
-[[services]]
-  internal_port = 11898
-  protocol = "udp"
+---
 
-  [[services.ports]]
-    port = 11898
-```
+### Category 2: Legitimate Free Cloud VMs (True Virtual Machines with Open UDP)
 
-#### 4. Ultra-Low-Cost Game/VPS Cloud Containers (Wispbyte, Hetzner, Contabo)
-- Budget cloud hosts (like **Wispbyte** or **Hetzner**) provide unmetered raw UDP ports starting at **$1.00 – $3.00/month**.
-- Set the environment variable `PORT=11898` (or your assigned container port) and run `node server.js`.
+If you want a permanent cloud VM with a dedicated public IPv4 address and unrestricted raw UDP access:
+
+1. **Oracle Cloud Infrastructure (OCI) "Always Free"**:
+   - **Specs:** Up to 4 ARM Ampere cores with 24 GB RAM (`VM.Standard.A1.Flex`) or 2 AMD micro-instances (`VM.Standard.E2.1.Micro`).
+   - **UDP Support:** Full root access with `iptables` / Security Lists — open any UDP port (including standard port `8000` or `11898`).
+   - **Advantages:** 100% free forever, permanent static public IPv4, zero renewal buttons.
+   - **Requirements:** Requires a valid credit/debit card for identity verification (KYC) during signup. Compute availability can be scarce in popular regions.
+
+2. **Google Cloud Platform (GCP) Free Tier (`e2-micro`)**:
+   - **Specs:** 1 `e2-micro` instance (in US regions: `us-central1`, `us-east1`, or `us-west1`).
+   - **UDP Support:** Full UDP support on an external public IP via VPC firewall rules.
+   - **Requirements:** Credit card required at registration. Egress traffic beyond 1 GB/month can incur nominal charges.
+
+3. **AWS Free Tier (`t2.micro` / `t3.micro`)**:
+   - **Specs:** 750 hours/month of EC2 compute.
+   - **Requirements:** Only free for the first 12 months, credit card required, and public IPv4 charges apply unless monitored under free allowance.
+
+---
+
+### Category 3: Popular Cloud Platforms That CANNOT Be Used (No Raw UDP Support)
+
+Many popular modern PaaS platforms are incompatible with the Realand biometric terminal:
+
+| Platform | Why It Fails for the Realand UDP Bridge |
+|---|---|
+| **Render** | Only supports HTTP/HTTPS and WebSockets over TCP. Inbound UDP datagrams are completely dropped. |
+| **Railway** | Provides TCP proxying, but has no support for inbound raw UDP traffic. |
+| **Koyeb** | Edge routing layer only routes HTTP/TCP traffic. Inbound UDP is not supported. |
+| **Vercel / Netlify** | Serverless architectures designed exclusively for stateless HTTP requests. Cannot maintain a persistent UDP datagram socket. |
+| **Heroku** | Router only accepts incoming HTTP/HTTPS and WebSockets over TCP on standard ports 80 and 443. |
+| **Replit / Glitch** | Proxies container ports through an HTTP reverse proxy. Raw external UDP sockets cannot receive packets. |
+
+> **Summary:** Because the scanner speaks raw, unencrypted UDP over a custom port, container hosts (like **Wispbyte**), local edge microcontrollers (**ESP32**), or true VPS instances (**Oracle Always Free**) are the proven paths to accept attendance packets without an expensive paid cloud load balancer.
 
 ---
 
@@ -467,9 +484,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 ---
 
-## 10. Full SDK Dissection & Future Capabilities
+## 10. Extracted Protocol Specification & Future Capabilities
 
-The included directory [`SDK-CS-Desktop-Software(2960)`](SDK-CS-Desktop-Software(2960)) contains the complete original manufacturer desktop demo applications. Here is an architectural map of what can be built using this reference code:
+All protocol definitions, bitfield mathematics, and verification mode constants have been extracted into clean, open-source documentation in [`docs/PROTOCOL_SPEC.md`](docs/PROTOCOL_SPEC.md). The original vendor binary packages are excluded to respect proprietary licensing.
+
+Here is an architectural map of what can be built using the reverse-engineered protocol specifications:
 
 | Component | SDK Reference File | Capability / What Can Be Built |
 |---|---|---|
