@@ -490,16 +490,16 @@ All protocol definitions, bitfield mathematics, and verification mode constants 
 
 Here is an architectural map of what can be built using the reverse-engineered protocol specifications:
 
-| Component | SDK Reference File | Capability / What Can Be Built |
-|---|---|---|
-| **Real-time Push** | `RealTimeFrm.pas` / `RealTimeLogForm.cs` | **What this bridge implements:** Instant UDP capture & cloud forwarding. |
-| **Historical Log Pull** | `GLogForm.cs` / `GLogForm.pas` | Polling mode: Download all historical punches over TCP socket when terminal is offline. |
-| **User Enrollment** | `EnrollForm.cs` / `EnrollForm.pas` | Remotely register/delete fingerprints, RFID cards, and PIN passwords from a web dashboard. |
-| **Door Access Control** | `AccessControlForm.cs` / `ACForm.cs` | Manage time zones, user groups, holiday schedules, and trigger electronic door strikes. |
-| **Scheduled Bell / Alarms**| `AlarmForm.cs` / `AlarmForm.pas` | Configure up to 24 scheduled bell chime alarms for shift/class changes. |
-| **LCD Screen Messages** | `AttForm.cs` / `AttForm.pas` | Send custom Unicode text messages to display on the terminal screen for specific users. |
-| **Custom Sound Upload** | `SystemSettingForm.cs` | Upload custom `.wav` voice prompts (22.05 kHz, 16-bit Mono, $\le 75$ KB). |
-| **Time Synchronization** | `SystemSettingForm.cs` | Sync the terminal's internal RTC clock with NTP / internet standard time. |
+| Component | Capability / What Can Be Built |
+|---|---|
+| **Real-time Push** | **What this bridge implements:** Instant UDP capture & cloud forwarding. |
+| **Historical Log Pull** | Polling mode: Download all historical punches over TCP socket when terminal is offline. |
+| **User Enrollment** | Remotely register/delete fingerprints, RFID cards, and PIN passwords from a web dashboard. |
+| **Door Access Control** | Manage time zones, user groups, holiday schedules, and trigger electronic door strikes. |
+| **Scheduled Bell / Alarms** | Configure up to 24 scheduled bell chime alarms for shift/class changes. |
+| **LCD Screen Messages** | Send custom Unicode text messages to display on the terminal screen for specific users. |
+| **Custom Sound Upload** | Upload custom `.wav` voice prompts (22.05 kHz, 16-bit Mono, $\le 75$ KB). |
+| **Time Synchronization** | Sync the terminal's internal RTC clock with NTP / internet standard time. |
 
 ---
 
