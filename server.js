@@ -1,10 +1,6 @@
 /**
  * Realand A-L355 UDP Cloud Bridge → Supabase (Production Edition)
  * ─────────────────────────────────────────────────────────────
- * Protocol: Realand CS-Desktop 2960/2911 binary UDP push
- * Source:   Decoded from official SDK RealTimeFrm.pas
- * Target:   Wispbyte Cloud Container (Port 11898)
- *
  * Hardened for 24/7 public cloud deployment:
  *  - Anti-reflection security guard (validates packets BEFORE acknowledging)
  *  - Exact 32-byte verbatim ACK echo (clears Realand hardware buffer)
