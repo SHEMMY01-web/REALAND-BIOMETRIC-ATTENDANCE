@@ -185,7 +185,7 @@ Requires **Node.js 18.0.0 or later** (uses native `fetch` and ES modules; zero e
 
 ```bash
 # Clone the repository
-git clone https://github.com/SHEMMY01-web/c.git realand-bridge
+git clone https://github.com/SHEMMY01-web/REALAND-BIOMETRIC-ATTENDANCE.git realand-bridge
 cd realand-bridge
 
 # Check code syntax
